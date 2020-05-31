@@ -35,3 +35,5 @@
 #define CMD_TERMINAR "-t"
 #define CMD_HISTORY_LONG "historico"
 #define CMD_HISTORY "-r"
+#define CMD_AJUDA_LONG "ajuda"
+#define CMD_AJUDA "-h"

@@ -1,19 +1,19 @@
 #include "structs.h"
-
+#include "rules.h"
 //Função que dá parse dos comandos para uma estrutura
 // Retorna 0 quando dá erro, 1 quando corre bem
 //Tipo=0 está a tratar a command line, senão é menu
-int trataComandos(char* argv[],int argc,st* estrutura,int tipo){
+int trataComandos(char** argv,int argc,st* estrutura,int tipo){
     int i=0;
 
     if (tipo==0) i=1;
 
 	for (;i<argc;i++){ 
 		if (strcmp(argv[i], CMD_TEMP_INATIV_LONG)==0 || strcmp(argv[i], CMD_TEMP_INATIV)==0){
-			estrutura->isTempoDeInatividade = true;
+			estrutura->isTempoDeInatividade = 1;
 			estrutura->argTempoDeInatividade = atoi(argv[i++]);
         } else if(strcmp(argv[i],CMD_TEMP_INATIV_LONG)==0 || strcmp(argv[i], CMD_TEMP_INATIV)==0){
-            estrutura->isTempoExecutar == true;
+            estrutura->isTempoExecutar == 1;
             estrutura->argTempoDeExecutar = atoi(argv[i++]);
 		} else if (strcmp(argv[i], CMD_EXECUTAR_LONG)==0 || strcmp(argv[i], CMD_EXECUTAR)==0){
             char* aux = argv[i++];
@@ -21,17 +21,17 @@ int trataComandos(char* argv[],int argc,st* estrutura,int tipo){
                 printf("Mensagem demasiado longa\n"); //Temos de tratar este erro
                 return 0;
             } 
-			estrutura->isExecutar = true;
+			estrutura->isExecutar = 1;
 			strcpy(estrutura->argExecutar, aux);
 		} else if (strcmp(argv[i], CMD_LIST_LONG)==0 || strcmp(argv[i], CMD_LIST)==0){
-            estrutura->isListar = true;
+            estrutura->isListar = 1;
         } else if (strcmp(argv[i], CMD_TERMINAR_LONG)==0 || strcmp(argv[i], CMD_TERMINAR)==0){
-            estrutura->isTerminar = true;
+            estrutura->isTerminar = 1;
             estrutura->argvTerminar = atoi(argv[i++]);
         } else if (strcmp(argv[i], CMD_HISTORY_LONG)==0 || strcmp(argv[i], CMD_HISTORY)==0){
-            estrutura->isHistory = true;
+            estrutura->isHistory = 1;
         } else if (strcmp(argv[i], CMD_AJUDA_LONG)==0 || strcmp(argv[i], CMD_AJUDA)==0){
-            estrutura->isAjuda = true;
+            estrutura->isAjuda = 1;
             //Colocar aqui os prints dos comandos
         }
 	}
@@ -48,28 +48,30 @@ int main (int argc, char* argv[]){
 
 	fd_in=open("fifo_in", O_WRONLY);
 
-    if (trataComandos(argv,argc,&estrutura,0))
-        write(fd_in,estrutura,sizeof(st));
+    if (trataComandos(argv,argc,&estrutura,0)){
+        write(fd_in,&estrutura,sizeof(st));
+        }
+        
     else
         printf("Ocorreu um erro na leitura dos comandos.\n");
 
-	while(1){
-        printf("\nComando: ");
-        scanf("%s",buff[0]);
-        printf("\nArgumento: ");
-        scanf("%s",buff[1]);  
-        if (trataComandos(buff,2,&estrutura,1))
-            write(fd_in,estrutura,sizeof(st));
-        else
-            printf("Ocorreu um erro na leitura dos comandos.\n");
-        
+	 while(1){
+         printf("\nComando: ");
+         scanf("%s",buff[0]);
+         printf("\nArgumento: ");
+         scanf("%s",buff[1]);  
+         if (trataComandos(buff,2,&estrutura,1))
+             write(fd_in,&estrutura,sizeof(st));
+         else
+             printf("Ocorreu um erro na leitura dos comandos.\n");
+
     }
 
 	//se e tempo de inatividade, tempo de execucao ou sair nao precissa de ler output
-	if ((strncmp(argv[1],"-1",2))==0 || (strncmp(argv[1],"-m",2)==0)|| (strncmp(argv[1],"-t",2)==0)){	
-		fd_out=open("fifo_out", O_RDONLY); 
-		n=read(fd_out,buf,MAX);
-		write(1,&buf,n);
-	}
+	//if ((strncmp(argv[1],"-1",2))==0 || (strncmp(argv[1],"-m",2)==0)|| (strncmp(argv[1],"-t",2)==0)){	
+	// 	fd_out=open("fifo_out", O_RDONLY); 
+	// 	n=read(fd_out,buff,MAX);
+	// 	write(1,&buff,n);
+	// }
 	return 0;
 }

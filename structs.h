@@ -1,11 +1,15 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
+#include "rules.h"
 
-typedef struct rimefodime {
+typedef struct comandos{
 	int isTempoDeInatividade;  	// FLAG
 	int argTempoDeInatividade;
-	int isExecutar;   			// FLAG
-	char* argExecutar;
+    int isTempoExecutar;        //FLAG    
+    int argTempoDeExecutar;     
+	int isExecutar;   			//FLAG
+    int isListar;               //FLAG
+	char argExecutar[MAX];
+    int isTerminar;             //FLAG
+    int argvTerminar;
+    int isHistory;              //FLAG
+    int isAjuda;                //FLAG
 } st;
