@@ -35,7 +35,7 @@ typedef struct tarefas
 	char* argumentos;
 	int terminada;//0 -> ainda nao terminou || 1 -> ja terminou com sucesso || 
 				  //2 -> terminou por max inativdade || 3 -> terminou por max execucao
-				  //4 -> terminou com erro
+				  //4 -> terminada por cliente || 5 -> terminou com erro
 	int pid;
 }tarefa;		  
 				  
@@ -44,5 +44,8 @@ int parse (char* texto,char* comandos[]);
 char* listarTarefas(tarefa t[],int n,int x);
 void novaTarefa(int i,char res[]);
 void intToStr(int i,char str[]);
-int executarTarefa(char* arg,tarefa* t,int t_exec,int t_ina);
+int executarTarefa(char* arg,int t_exec,int t_ina);
 void parseExec (char* t,char* programa[][MAX_ARGS]);
+void mudarOUTandERR ();
+void atualizarHistorico(tarefa t[],int n);
+void handler(int sig);

@@ -14,7 +14,7 @@ int parse (char* texto,char* comandos[]){
 	int i = 0;
 	char* comando;
 	comando=strtok(texto,"\n");
-	while (comando!=NULL) {
+	while (comando!=NULL && i<2) {
 		comandos[i]=comando;
 		comando=strtok(NULL,"\n");
 		i++;
@@ -23,15 +23,34 @@ int parse (char* texto,char* comandos[]){
 	return i;
 }
 
+void atualizarHistorico(tarefa t[],int n){
+	int i,status;
+
+	for (i=0;i<n && i<MAX;i++){
+		if (t[i%MAX].terminada!=0) continue;
+		
+		if ((waitpid(t[i%MAX].pid,&status,WNOHANG))==-1) perror("erro: wait\n");
+
+		if (WIFEXITED(status))
+			t[i%MAX].terminada=WEXITSTATUS(status);
+
+		if (WIFSIGNALED(status)) //se foi terminado por um sinal
+			t[i%MAX].terminada=WEXITSTATUS(status);
+	}
+}
+
 
 char* listarTarefas(tarefa t[],int n,int x){//if x=0 da tarefas em execucao else da tarefas terminadas 
 	char str[3];
-	static char res[MAX_OUT]="";
+	static char res[MAX_OUT];
 	res[0]='\0';
 	int i;
+
+	atualizarHistorico(t,n);
+
 	if (x==0){
 		strcat(res,"Tarefas em execucao:\n");
-		for (i=0;i<n%MAX;i++){
+		for (i=0;i<n && i<MAX;i++){
 			if (t[i].terminada==0){
 				strcat(res,"#");
 				intToStr(i+1,str);
@@ -43,7 +62,7 @@ char* listarTarefas(tarefa t[],int n,int x){//if x=0 da tarefas em execucao else
 		}
 	}else{
 		strcat(res,"Tarefas terminadas:\n");
-		for (i=0;i<n%MAX;i++){
+		for (i=0;i<n && i<MAX;i++){
 			if (t[i].terminada==1){
 				strcat(res,"#");
 				intToStr(i+1,str);
@@ -72,6 +91,14 @@ char* listarTarefas(tarefa t[],int n,int x){//if x=0 da tarefas em execucao else
 				strcat(res,"#");
 				intToStr(i+1,str);
 				strcat(res,str);
+				strcat(res,", terminada por cliente: ");
+				strcat(res,t[i].argumentos);
+				strcat(res,"\n");
+
+			}else if (t[i].terminada==5){
+				strcat(res,"#");
+				intToStr(i+1,str);
+				strcat(res,str);
 				strcat(res,", erro: ");
 				strcat(res,t[i].argumentos);
 				strcat(res,"\n");
@@ -82,6 +109,7 @@ char* listarTarefas(tarefa t[],int n,int x){//if x=0 da tarefas em execucao else
 			
 	return res;
 }
+
 
 void novaTarefa(int i,char out[]){
 	out[0]='\0';
@@ -125,12 +153,8 @@ void parseExec (char* t,char* programa[][MAX_ARGS]){
 
 }
 
-int executarTarefa(char* arg,tarefa* t,int t_exec,int t_ina){//executa uma tarefa
-	char* programa[MAX_COMMANDS][MAX_ARGS];
-	int ncomandos,i,w;//numero de comandos
-	char buf[MAX];
-	int pipes[MAX_COMMANDS-1][2];
-	int status[MAX_COMMANDS];
+
+void mudarOUTandERR () {
 	int fd = open("LOGS.txt",O_TRUNC | O_WRONLY | O_CREAT,0644);
 	dup2(fd,1);
 	close(fd);
@@ -138,8 +162,21 @@ int executarTarefa(char* arg,tarefa* t,int t_exec,int t_ina){//executa uma taref
 	int fd_err = open("erros.txt",O_TRUNC | O_WRONLY | O_CREAT,0644);
 	dup2(fd_err,2);
 	close(fd_err);
+}
+
+
+int executarTarefa(char* arg,int t_exec,int t_ina){//executa uma tarefa
+	char* programa[MAX_COMMANDS][MAX_ARGS];
+	int ncomandos,i,w;//numero de comandos
+	char buf[MAX];
+	int pipes[MAX_COMMANDS-1][2];
+	int status[MAX_COMMANDS];
+
+	alarm(t_exec);
+	signal(SIGALRM,handler);
 
 	parseExec(arg,programa);
+	sleep(60);
 
 	for (ncomandos=0;programa[ncomandos][0]!=NULL;ncomandos++);
 
@@ -147,6 +184,7 @@ int executarTarefa(char* arg,tarefa* t,int t_exec,int t_ina){//executa uma taref
 		switch (fork()){
 			case -1:
 				perror("fork");
+				_exit(5);
 				return -1;
 			case 0:
 				execvp(programa[0][0],programa[0]);
@@ -157,10 +195,12 @@ int executarTarefa(char* arg,tarefa* t,int t_exec,int t_ina){//executa uma taref
 			if (i==0){
 				if (pipe(pipes[i])!=0){
 					perror("pipe");
+					_exit(5);
 				}
 				switch (fork()){
 					case -1:
 						perror("fork");
+						_exit(5);
 						break;
 					case 0:
 						close(pipes[i][0]);
@@ -178,6 +218,7 @@ int executarTarefa(char* arg,tarefa* t,int t_exec,int t_ina){//executa uma taref
 				switch (fork()){
 					case -1:
 						perror("fork");
+						_exit(5);
 						break;
 					case 0:
 						dup2(pipes[i-1][0],0);
@@ -192,11 +233,13 @@ int executarTarefa(char* arg,tarefa* t,int t_exec,int t_ina){//executa uma taref
 			}else{
 				if (pipe(pipes[i])!=0){
 					perror("pipe");
+					_exit(5);
 					return -1;
 				}
 				switch (fork()){
 					case -1:
 						perror("fork");
+						_exit(5);
 						break;
 					case 0:
 						close(pipes[i][0]);
@@ -220,13 +263,16 @@ int executarTarefa(char* arg,tarefa* t,int t_exec,int t_ina){//executa uma taref
 
 	for (w=0;w<ncomandos;w++){
 		wait(&status[w]);
+		WEXITSTATUS(status[w]);
+		if (status[w]==5) _exit(5);
 	}
-
-	(*t).terminada=1;
 
 	return 0;
 }
 
 
-
 /*Tratamento de sinais*/
+
+void handler(int sig){
+	_exit(2);	
+}
