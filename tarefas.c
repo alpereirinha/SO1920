@@ -9,33 +9,44 @@
 
 #include "tarefas.h"
 
-int parse (char* texto,char* comandos[]){
+int parse (char* t,char* comandos[]){
 
-	int i = 0;
+	int i=0;
+	int r;
 	char* comando;
+	char* texto=strdup(t);
+	
 	comando=strtok(texto,"\n");
-	while (comando!=NULL && i<2) {
+
+	r=atoi(comando);//numero de argumentos
+	r--;
+
+	comando=strtok(NULL,"\n");
+
+	while (comando!=NULL) {
 		comandos[i]=comando;
 		comando=strtok(NULL,"\n");
 		i++;
 	} 
 	comandos[i]=NULL;
-	return i;
+
+	return r;
 }
 
 void atualizarHistorico(tarefa t[],int n){
 	int i,status;
 
 	for (i=0;i<n && i<MAX;i++){
-		if (t[i%MAX].terminada!=0) continue;
+		if (t[i].terminada!=0) continue;
 		
-		if ((waitpid(t[i%MAX].pid,&status,WNOHANG))==-1) perror("erro: wait\n");
+		if ((waitpid(t[i].pid,&status,WNOHANG))==-1) perror("erro: wait\n");
 
 		if (WIFEXITED(status))
-			t[i%MAX].terminada=WEXITSTATUS(status);
+			t[i].terminada=WEXITSTATUS(status);
 
-		if (WIFSIGNALED(status)) //se foi terminado por um sinal
-			t[i%MAX].terminada=WEXITSTATUS(status);
+		//if (WIFSIGNALED(status)){ //se foi terminado por um sinal
+		//	t[i].terminada=WEXITSTATUS(status);
+		//	printf("2: %i\n", t[i].terminada);}
 	}
 }
 
@@ -173,10 +184,11 @@ int executarTarefa(char* arg,int t_exec,int t_ina){//executa uma tarefa
 	int status[MAX_COMMANDS];
 
 	alarm(t_exec);
-	signal(SIGALRM,handler);
+	signal(SIGALRM,handlerMaxExec);
+
+	//sleep(20);
 
 	parseExec(arg,programa);
-	sleep(60);
 
 	for (ncomandos=0;programa[ncomandos][0]!=NULL;ncomandos++);
 
@@ -273,6 +285,6 @@ int executarTarefa(char* arg,int t_exec,int t_ina){//executa uma tarefa
 
 /*Tratamento de sinais*/
 
-void handler(int sig){
-	_exit(2);	
+void handlerMaxExec (int sig){
+	_exit(3);	
 }

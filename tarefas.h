@@ -48,4 +48,4 @@ int executarTarefa(char* arg,int t_exec,int t_ina);
 void parseExec (char* t,char* programa[][MAX_ARGS]);
 void mudarOUTandERR ();
 void atualizarHistorico(tarefa t[],int n);
-void handler(int sig);
+void handlerMaxExec(int sig);

@@ -21,7 +21,7 @@ int main(int argc, char *argv[]){
 	int ntarefas=0;//numero de tarefas
 	tarefa historico[MAX];
 
-	//mudarOUTandERR();
+	mudarOUTandERR();
 
 	mkfifo("fifo_out",0666);//depois de analisar o input escreve no fifo output para o cliente escrever
 	mkfifo("fifo_in",0666);//cria fifo input e espera o cliente
@@ -35,7 +35,7 @@ int main(int argc, char *argv[]){
 		c=parse(buf,comandos);
 
 		if (strcmp(comandos[0],"-i")==0){//tempo de inatividade
-			printf("%i\n",c);
+
 			if (c<2) {strcpy(output,"Argumento dado invalido.\n");}
 			else{
 				t_ina=atoi(comandos[1]);
