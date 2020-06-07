@@ -51,9 +51,8 @@ void atualizarHistorico(tarefa t[],int n){
 }
 
 
-char* listarTarefas(tarefa t[],int n,int x){//if x=0 da tarefas em execucao else da tarefas terminadas 
+void listarTarefas(tarefa t[],int n,int x,char res[]){//if x=0 da tarefas em execucao else da tarefas terminadas 
 	char str[3];
-	static char res[MAX_OUT];
 	res[0]='\0';
 	int i;
 
@@ -117,8 +116,6 @@ char* listarTarefas(tarefa t[],int n,int x){//if x=0 da tarefas em execucao else
 			}
 		}
 	}		
-			
-	return res;
 }
 
 
@@ -186,7 +183,7 @@ int executarTarefa(char* arg,int t_exec,int t_ina){//executa uma tarefa
 	alarm(t_exec);
 	signal(SIGALRM,handlerMaxExec);
 
-	//sleep(20);
+	//sleep(10);
 
 	parseExec(arg,programa);
 
@@ -287,4 +284,77 @@ int executarTarefa(char* arg,int t_exec,int t_ina){//executa uma tarefa
 
 void handlerMaxExec (int sig){
 	_exit(3);	
+}
+
+void handlerMaxInat (int sig){
+	_exit(2);	
+}
+
+
+
+/*----cliente------*/
+
+void paraIN(int argc,char* argv[],char* buf){
+	char narg[3];
+	narg[0]='\0';
+	buf[0]='\0';
+
+	intToStr(argc,narg);
+	strcat(buf,narg);//a primeira linha corresponde ao numero de argumentos
+	strcat(buf,"\n");
+
+	for (int i=1;i<argc;i++){
+		strcat(buf,argv[i]);
+		strcat(buf,"\n"); //os argumentos ficam separados por \n
+	}
+}
+
+
+void escreverLerFIFO(char buf[]){
+
+	int fd_in,fd_out,n;
+	char output[MAX_OUT]="";
+
+	fd_in=open("fifo_in",O_WRONLY,O_TRUNC);
+	write(fd_in,buf,strlen(buf));
+	close(fd_in);
+
+	fd_out=open("fifo_out",O_RDONLY); 
+	n=read(fd_out,output,MAX_OUT);
+	close (fd_out);
+	write(1,&output,n);
+}
+
+void parseInput(char dest[], char src[]){
+
+	char texto[MAX];
+	char nargs[3];
+	int i,j;
+	int c=0;
+
+	texto[0]='\n';
+	j=1;
+	for (i=0;src[i]!='\0';i++) {
+		if (src[i]==' ') {
+			texto[j++]='\n';
+		}else if (src[i]=='\''){
+			for (i+=1;src[i]!='\'' && src[i]!='\0';i++){
+				texto[j++]=src[i];
+			}
+			break;
+		}
+		else texto[j++]=src[i];
+	}
+	texto[j]='\n';
+	texto[j+1]='\0';
+	i=0;
+	while (i<j){//calcula o numero de argumentos
+		if (texto[i]=='\n') {while(texto[i]=='\n') i++;}
+		else {c++; while(texto[i]!='\n') i++;}
+	}
+	dest[0]='\0';
+	intToStr(c+1,nargs);
+	strcat(dest,nargs);
+	strcat(dest,texto);
+
 }

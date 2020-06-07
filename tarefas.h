@@ -11,7 +11,7 @@
 #define MAX_COMMANDS 100
 #define MAX_ARGS 30
 #define MAX 256
-#define MAX_OUT 512
+#define MAX_OUT 2048
 
 //Comandos
 #define CMD_TEMP_INATIV_LONG "tempo-inatividade"
@@ -41,7 +41,7 @@ typedef struct tarefas
 				  
 
 int parse (char* texto,char* comandos[]);
-char* listarTarefas(tarefa t[],int n,int x);
+void listarTarefas(tarefa t[],int n,int x,char res[]);
 void novaTarefa(int i,char res[]);
 void intToStr(int i,char str[]);
 int executarTarefa(char* arg,int t_exec,int t_ina);
@@ -49,3 +49,10 @@ void parseExec (char* t,char* programa[][MAX_ARGS]);
 void mudarOUTandERR ();
 void atualizarHistorico(tarefa t[],int n);
 void handlerMaxExec(int sig);
+
+
+/*funcoes para cliente*/
+
+void paraIN(int argc,char* argv[],char* buf);
+void escreverLerFIFO(char buf[]);
+void parseInput(char* dest, char* src);
