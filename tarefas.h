@@ -28,6 +28,7 @@
 #define CMD_HISTORY "-r"
 #define CMD_AJUDA_LONG "ajuda"
 #define CMD_AJUDA "-h"
+#define CMD_QUIT "quit"
 
 
 typedef struct tarefas

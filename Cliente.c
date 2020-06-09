@@ -18,10 +18,10 @@ int main (int argc, char* argv[]){
 
 	if (argc==1) {
 		do{
-			write(1,"SO$ ",4);
+			write(1,"argus$ ",7);
 			n=read(0,&str,MAX);
 			str[n-1]='\0';
-			if (strcmp(str,"quit")==0) {q=0; continue;}
+			if (strcmp(str,CMD_QUIT)==0) {q=0; continue;}
 
 			parseInput(buf,str);
 
