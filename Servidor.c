@@ -93,8 +93,7 @@ int main(int argc, char *argv[]){
 			listarTarefas(historico,ntarefas,1,output);
 
 		}else if(strcmp(comandos[0],CMD_AJUDA_LONG)==0 || strcmp(comandos[0],CMD_AJUDA)==0){//ajuda
-			strcpy(output,"Ajuda.\n");
-			//write(1,"tempo-inatividade segs\ntempo-execucao segs\nexecutar p1 | p2 ... | pn\nlistar\nterminar n\nhistorico\najuda\nquit",114);
+			strcpy(output,"tempo-inatividade segs\ntempo-execucao segs\nexecutar p1 | p2 ... | pn\nlistar\nterminar n\nhistorico\najuda\nquit");
 		
 		}else if(strcmp(comandos[0],CMD_QUIT)==0){
 			strcpy(output,"O servidor terminou.\n");
@@ -104,7 +103,6 @@ int main(int argc, char *argv[]){
 			strcpy(output,"Opcao invalida.\n");
 		}
 
-		
 		fd_out=open("fifo_out",O_WRONLY,O_TRUNC); 		 
 		write(fd_out,&output,strlen(output));	
 		close(fd_out);	
