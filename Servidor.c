@@ -34,7 +34,7 @@ int main(int argc, char *argv[]){
 		
 		c=parse(buf,comandos);
 
-		if (strcmp(comandos[0],CMD_TEMP_INATIV_LONG)==0 || strcmp(comandos[0],CMD_TEMP_INATIV)==0){//tempo de inatividade
+		if (strcmp(comandos[0],"-i")==0){//tempo de inatividade
 
 			if (c<2) {strcpy(output,"Argumento dado invalido.\n");}
 			else{
@@ -44,7 +44,7 @@ int main(int argc, char *argv[]){
 					t_ina=0;
 				}else{strcpy(output,"Tempo maximo de inatividade alterado.\n");}
 			}
-		}else if(strcmp(comandos[0],CMD_TEMP_EXEC_LONG)==0 || strcmp(comandos[0],CMD_TEMP_EXEC)==0){//tempo de execucao
+		}else if(strcmp(comandos[0],"-m")==0){//tempo de execucao
 			if (c<2) {strcpy(output,"Argumento dado invalido.\n");}
 			else{
 				t_exec=atoi(comandos[1]);
@@ -54,41 +54,45 @@ int main(int argc, char *argv[]){
 				}
 				else{strcpy(output,"Tempo maximo de execucao alterado.\n");}
 			}
-		}else if(strcmp(comandos[0],CMD_EXECUTAR_LONG)==0 || strcmp(comandos[0],CMD_EXECUTAR)==0){//executar uma tarefa
-			historico[ntarefas%MAX].terminada=0;
-			historico[ntarefas%MAX].argumentos=strdup(comandos[1]);
-			switch (pid=fork()){
-				case -1:
-					perror("fork");
-					break;
-				case 0:
-					executarTarefa(comandos[1],t_exec,t_ina);
-					_exit(1);					   
+		}else if(strcmp(comandos[0],"-e")==0){//executar uma tarefa
+			if (c<2) {strcpy(output,"Argumento dado invalido.\n");}
+			else{
+				historico[ntarefas%MAX].terminada=0;
+				historico[ntarefas%MAX].argumentos=strdup(comandos[1]);
+				switch (pid=fork()){
+					case -1:
+						perror("fork");
+						break;
+					case 0:
+						n=executarTarefa(comandos[1],t_exec,t_ina);					   
+						exit(n);
+				}
+				historico[ntarefas%MAX].pid=pid;
+				novaTarefa(++ntarefas%MAX,output);
 			}
-			historico[ntarefas%MAX].pid=pid;
-			novaTarefa(++ntarefas%MAX,output);
 	 
-		}else if(strcmp(comandos[0],CMD_LIST_LONG)==0 || strcmp(comandos[0],CMD_LIST)==0){//listar tarefas em execucao
+		}else if(strcmp(comandos[0],"-l")==0){//listar tarefas em execucao
 			listarTarefas(historico,ntarefas,0,output);
 
-		}else if(strcmp(comandos[0],CMD_TERMINAR_LONG)==0 || strcmp(comandos[0],CMD_TERMINAR)==0){//terminar uma tarefa em execucao
+		}else if(strcmp(comandos[0],"-t")==0){//terminar uma tarefa em execucao
 			atualizarHistorico(historico,ntarefas);
 			n=atoi(comandos[1]);//da 0 no caso da string ser invalida
 			n-=1;//valor real
 			if (c<=1 || n<0 || n>=ntarefas)
 				strcpy(output,"Argumento dado invalido.\n");			
 			else if (historico[n].terminada==0){
-				kill(historico[n].pid,SIGKILL);
-				historico[n].terminada=4;
-				strcpy(output,"Tarefa foi terminda com sucesso?\n");
+				if (kill(historico[n].pid,SIGUSR1)==-1){
+					perror("erro: terminar\n");
+				}
+				else strcpy(output,"Tarefa foi terminda.\n");
 			}else{
 				strcpy(output,"Tarefa ja terminou.\n");
 			}
 
-		}else if(strcmp(comandos[0],CMD_HISTORY_LONG)==0 || strcmp(comandos[0],CMD_HISTORY)==0){//historico de tarefas terminadas
+		}else if(strcmp(comandos[0],"-r")==0){//historico de tarefas terminadas
 			listarTarefas(historico,ntarefas,1,output);
 
-		}else if(strcmp(comandos[0],CMD_AJUDA_LONG)==0 || strcmp(comandos[0],CMD_AJUDA)==0){//ajuda
+		}else if(strcmp(comandos[0],"-h")==0){//ajuda
 			strcpy(output,"Ajuda.\n");
 		
 		}else if(strcmp(comandos[0],"quit")==0){
@@ -100,7 +104,7 @@ int main(int argc, char *argv[]){
 		}
 
 		
-		fd_out=open("fifo_out",O_WRONLY); 		 
+		fd_out=open("fifo_out",O_WRONLY,O_TRUNC); 		 
 		write(fd_out,&output,strlen(output));	
 		close(fd_out);	
 

@@ -49,6 +49,8 @@ void parseExec (char* t,char* programa[][MAX_ARGS]);
 void mudarOUTandERR ();
 void atualizarHistorico(tarefa t[],int n);
 void handlerMaxExec(int sig);
+void handlerKill (int sig);
+void handlerMaxInat (int sig);
 
 
 /*funcoes para cliente*/

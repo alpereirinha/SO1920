@@ -9,6 +9,10 @@
 
 #include "tarefas.h"
 
+int* pids;
+int n_pids;
+int terminado = 0;
+
 int parse (char* t,char* comandos[]){
 
 	int i=0;
@@ -180,8 +184,17 @@ int executarTarefa(char* arg,int t_exec,int t_ina){//executa uma tarefa
 	int pipes[MAX_COMMANDS-1][2];
 	int status[MAX_COMMANDS];
 
+	n_pids=0;
+	terminado=0;
+
 	alarm(t_exec);
-	signal(SIGALRM,handlerMaxExec);
+	if (signal(SIGALRM,handlerMaxExec)==SIG_ERR){
+		perror("Erro: sinal\n");
+	}
+
+	if (signal(SIGUSR1,handlerKill)==SIG_ERR){
+		perror("Erro: sinal\n");
+	}
 
 	//sleep(10);
 
@@ -189,13 +202,20 @@ int executarTarefa(char* arg,int t_exec,int t_ina){//executa uma tarefa
 
 	for (ncomandos=0;programa[ncomandos][0]!=NULL;ncomandos++);
 
+	pids=malloc(sizeof(int) * ncomandos);
+
 	if (ncomandos==1){//so ha um comando -> nao precisa de pipes
-		switch (fork()){
+		n_pids++;
+		switch (pids[0]=fork()){
 			case -1:
 				perror("fork");
 				_exit(5);
-				return -1;
+
 			case 0:
+				alarm(t_ina);
+				if (signal(SIGALRM,handlerMaxInat)==SIG_ERR){
+					perror("Erro: sinal\n");
+				}
 				execvp(programa[0][0],programa[0]);
 				_exit(0);
 		}
@@ -206,12 +226,18 @@ int executarTarefa(char* arg,int t_exec,int t_ina){//executa uma tarefa
 					perror("pipe");
 					_exit(5);
 				}
-				switch (fork()){
+				n_pids++;
+				switch (pids[i]=fork()){
+					
 					case -1:
 						perror("fork");
 						_exit(5);
 						break;
 					case 0:
+						alarm(t_ina);
+						if (signal(SIGALRM,handlerMaxInat)==SIG_ERR){
+							perror("Erro: sinal\n");
+						}
 						close(pipes[i][0]);
 
 						dup2(pipes[i][1],1);
@@ -224,12 +250,18 @@ int executarTarefa(char* arg,int t_exec,int t_ina){//executa uma tarefa
 						break;
 				}
 			}else if(i==ncomandos-1){
-				switch (fork()){
+				n_pids++;
+				switch (pids[i]=fork()){
+					
 					case -1:
 						perror("fork");
 						_exit(5);
-						break;
+
 					case 0:
+						alarm(t_ina);
+						if (signal(SIGALRM,handlerMaxInat)==SIG_ERR){
+							perror("Erro: sinal\n");
+						}
 						dup2(pipes[i-1][0],0);
 						close(pipes[i-1][0]);
 
@@ -243,14 +275,19 @@ int executarTarefa(char* arg,int t_exec,int t_ina){//executa uma tarefa
 				if (pipe(pipes[i])!=0){
 					perror("pipe");
 					_exit(5);
-					return -1;
 				}
-				switch (fork()){
+				n_pids++;
+				switch (pids[i]=fork()){
 					case -1:
 						perror("fork");
 						_exit(5);
-						break;
 					case 0:
+						
+						alarm(t_ina);
+						if (signal(SIGALRM,handlerMaxInat)==SIG_ERR){
+							perror("Erro: sinal\n");
+						}
+
 						close(pipes[i][0]);
 
 						dup2(pipes[i][1],1);
@@ -270,24 +307,51 @@ int executarTarefa(char* arg,int t_exec,int t_ina){//executa uma tarefa
 		}
 	}
 
-	for (w=0;w<ncomandos;w++){
-		wait(&status[w]);
-		WEXITSTATUS(status[w]);
-		if (status[w]==5) _exit(5);
+	i=0;
+	while (terminado==0 && i<ncomandos) {
+		wait(&status[i]);
+		if (WIFSIGNALED(status[i]) && terminado==0) terminado=1;
+		i++;
 	}
 
-	return 0;
+	free(pids);
+
+	return terminado+1;
+
 }
 
 
 /*Tratamento de sinais*/
 
+void handlerKill (int sig){
+	for (int i=0;i<=n_pids;i++){
+
+		if (pids[i]>0){
+			kill(pids[i],SIGKILL);
+		}
+	}
+
+	terminado=3;
+}
+
 void handlerMaxExec (int sig){
-	_exit(3);	
+	for (int i=0;i<=n_pids;i++){
+
+		if (pids[i]>0){
+			kill(pids[i],SIGKILL);
+		}
+	}	
+
+	terminado=2;	
 }
 
 void handlerMaxInat (int sig){
-	_exit(2);	
+	for (int i=0;i<=n_pids;i++){
+
+		if (pids[i]>0){
+			kill(pids[i],SIGKILL);
+		}
+	}	
 }
 
 
