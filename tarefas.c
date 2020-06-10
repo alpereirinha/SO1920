@@ -309,10 +309,11 @@ int executarTarefa(char* arg,int t_exec,int t_ina){//executa uma tarefa
 
 	i=0;
 	while (terminado==0 && i<ncomandos) {
-		wait(&status[i]);
-		if (WIFSIGNALED(status[i]) && terminado==0) terminado=1;
-		i++;
-	}
+        wait(&status[i]);
+        if (WIFSIGNALED(status[i]) && terminado==0) {
+            if (WTERMSIG(status[i])==9 || WTERMSIG(status[i])==14) terminado=1;}
+        i++;
+    }
 
 	free(pids);
 
@@ -420,5 +421,5 @@ void parseInput(char dest[], char src[]){
 	intToStr(c+1,nargs);
 	strcat(dest,nargs);
 	strcat(dest,texto);
-
+	
 }

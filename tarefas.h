@@ -7,7 +7,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 #define MAX_COMMANDS 100
 #define MAX_ARGS 30
 #define MAX 256
