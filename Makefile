@@ -1,7 +1,13 @@
+CC = gcc
+CFLAGS = -Wall
+
 all: argus argusd
-	gcc argus.o argusd.o
+
+argus: argus.o
 argus.o: argus.c argus.h
-	gcc -c argus.c
+
+argusd:argus.o
 argusd.o: argusd.c argus.h
-	gcc -c argusd.c
-clean: rm *.p output
+
+clean:
+	rm -rf *.o argus argusd

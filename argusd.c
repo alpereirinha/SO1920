@@ -11,7 +11,7 @@
 
 int main(int argc, char *argv[]){
 	
-	int i,n,fd_in,fd_out,c,pid;
+	int n,fd_in,fd_out,c,pid;
 	int t_exec,t_ina;t_exec=t_ina=0;
 	int q = 1; //terminar servidor
 	char buf[MAX];

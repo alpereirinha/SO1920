@@ -9,7 +9,7 @@
 
 #include "argus.h"
 
-int main (int argc, char* argv[]){
+int main(int argc, char* argv[]){
 	
 	int n,q=1;
 	char buf[MAX];
