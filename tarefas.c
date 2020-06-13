@@ -13,6 +13,10 @@ int* pids;
 int n_pids;
 int terminado = 0;
 
+
+/*Funções utilizadas pelo argusd*/
+
+//Função que faz parse do que é lido no fifo_in e retorna o número de arugumentos dados
 int parse (char* t,char* comandos[]){
 
 	int i=0;
@@ -37,6 +41,7 @@ int parse (char* t,char* comandos[]){
 	return r;
 }
 
+//Função que atualiza o array com n tarefas.
 void atualizarHistorico(tarefa t[],int n){
 	int i,status;
 
@@ -54,8 +59,8 @@ void atualizarHistorico(tarefa t[],int n){
 	}
 }
 
-
-void listarTarefas(tarefa t[],int n,int x,char res[]){//if x=0 da tarefas em execucao else da tarefas terminadas 
+// Função que dá a lista das tarefas em execução se x==0, senão dá a lista das tarefas terminadas.
+void listarTarefas(tarefa t[],int n,int x,char res[]){
 	char str[3];
 	res[0]='\0';
 	int i;
@@ -122,7 +127,6 @@ void listarTarefas(tarefa t[],int n,int x,char res[]){//if x=0 da tarefas em exe
 	}		
 }
 
-
 void novaTarefa(int i,char out[]){
 	out[0]='\0';
 	char str[3];
@@ -165,7 +169,7 @@ void parseExec (char* t,char* programa[][MAX_ARGS]){
 
 }
 
-
+//Função que muda o STDOUT e o STDERR para um ficheiro LOGS.txt e erros.txt, respetivamente.
 void mudarOUTandERR () {
 	int fd = open("LOGS.txt",O_TRUNC | O_WRONLY | O_CREAT,0644);
 	dup2(fd,1);
@@ -176,10 +180,10 @@ void mudarOUTandERR () {
 	close(fd_err);
 }
 
-
-int executarTarefa(char* arg,int t_exec,int t_ina){//executa uma tarefa
+// Função que executa uma tarefa.
+int executarTarefa(char* arg,int t_exec,int t_ina){
 	char* programa[MAX_COMMANDS][MAX_ARGS];
-	int ncomandos,i,w;//numero de comandos
+	int ncomandos,i,w;
 	char buf[MAX];
 	int pipes[MAX_COMMANDS-1][2];
 	int status[MAX_COMMANDS];
@@ -322,43 +326,9 @@ int executarTarefa(char* arg,int t_exec,int t_ina){//executa uma tarefa
 }
 
 
-/*Tratamento de sinais*/
+/*Funções utilizadas pelo argus*/
 
-void handlerKill (int sig){
-	for (int i=0;i<=n_pids;i++){
-
-		if (pids[i]>0){
-			kill(pids[i],SIGKILL);
-		}
-	}
-
-	terminado=3;
-}
-
-void handlerMaxExec (int sig){
-	for (int i=0;i<=n_pids;i++){
-
-		if (pids[i]>0){
-			kill(pids[i],SIGKILL);
-		}
-	}	
-
-	terminado=2;	
-}
-
-void handlerMaxInat (int sig){
-	for (int i=0;i<=n_pids;i++){
-
-		if (pids[i]>0){
-			kill(pids[i],SIGKILL);
-		}
-	}	
-}
-
-
-
-/*----cliente------*/
-
+//Função que escreve na String buf, que será passada para o fifo_in, a string resultante de delimitar por '\n' os argumentos de argv[].
 void paraIN(int argc,char* argv[],char* buf){
 	char narg[3];
 	narg[0]='\0';
@@ -374,7 +344,7 @@ void paraIN(int argc,char* argv[],char* buf){
 	}
 }
 
-
+//Função que passa para o fifo:in o buf e espera a resposta do servidor pelo fifo_out que será depois impresso no STDOUT.
 void escreverLerFIFO(char buf[]){
 
 	int fd_in,fd_out,n;
@@ -390,6 +360,7 @@ void escreverLerFIFO(char buf[]){
 	write(1,&output,n);
 }
 
+//Função que faz parse da String que é dada pelo STDIN. A função recebe dois apontadores onde src é a função dada para ler e dest é a String onde deve escrever. dest será depois passada para o fifo_in.
 void parseInput(char dest[], char src[]){
 
 	char texto[MAX];
@@ -422,4 +393,39 @@ void parseInput(char dest[], char src[]){
 	strcat(dest,nargs);
 	strcat(dest,texto);
 	
+}
+
+
+/*Tratamento de sinais*/
+//Funções para controlo de sinal.
+
+void handlerKill (int sig){
+	for (int i=0;i<=n_pids;i++){
+
+		if (pids[i]>0){
+			kill(pids[i],SIGKILL);
+		}
+	}
+
+	terminado=3;
+}
+
+void handlerMaxExec (int sig){
+	for (int i=0;i<=n_pids;i++){
+
+		if (pids[i]>0){
+			kill(pids[i],SIGKILL);
+		}
+	}	
+
+	terminado=2;	
+}
+
+void handlerMaxInat (int sig){
+	for (int i=0;i<=n_pids;i++){
+
+		if (pids[i]>0){
+			kill(pids[i],SIGKILL);
+		}
+	}	
 }
