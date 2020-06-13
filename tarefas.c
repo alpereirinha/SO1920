@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "tarefas.h"
+#include "argus.h"
 
 int* pids;
 int n_pids;
@@ -16,7 +16,7 @@ int terminado = 0;
 
 /*Funções utilizadas pelo argusd*/
 
-//Função que faz parse do que é lido no fifo_in e retorna o número de arugumentos dados
+//Função que faz parse do que é lido no fifo_in e retorna o número de arugumentos dados.
 int parse (char* t,char* comandos[]){
 
 	int i=0;

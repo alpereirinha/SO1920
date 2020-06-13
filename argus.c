@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "tarefas.h"
+#include "argus.h"
 
 int main (int argc, char* argv[]){
 	

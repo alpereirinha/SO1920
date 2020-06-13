@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "tarefas.h"
+#include "argus.h"
 
 int main(int argc, char *argv[]){
 	
@@ -93,7 +93,7 @@ int main(int argc, char *argv[]){
 			listarTarefas(historico,ntarefas,1,output);
 
 		}else if(strcmp(comandos[0],CMD_AJUDA_LONG)==0 || strcmp(comandos[0],CMD_AJUDA)==0){//ajuda
-			strcpy(output,"tempo-inatividade segs\ntempo-execucao segs\nexecutar p1 | p2 ... | pn\nlistar\nterminar n\nhistorico\najuda\nquit");
+			strcpy(output,"tempo-inatividade segs\ntempo-execucao segs\nexecutar p1 | p2 ... | pn\nlistar\nterminar n\nhistorico\najuda\nquit\n");
 		
 		}else if(strcmp(comandos[0],CMD_QUIT)==0){
 			strcpy(output,"O servidor terminou.\n");
