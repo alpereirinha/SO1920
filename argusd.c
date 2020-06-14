@@ -16,15 +16,19 @@ int main(int argc, char *argv[]){
 	int q = 1; //terminar servidor
 	char buf[MAX];
 	char output[MAX_OUT];
-	char* comandos[MAX_COMMANDS];
+	char* comandos[2];
 	//informacao sobre as tarefas efetuadas
 	int ntarefas=0;//numero de tarefas
 	tarefa historico[MAX];
 
 	mudarOUTandERR();
 
-	mkfifo("fifo_out",0666);//depois de analisar o input escreve no fifo output para o cliente escrever
-	mkfifo("fifo_in",0666);//cria fifo input e espera o cliente
+	if (mkfifo("fifo_out",0666)==-1){//depois de analisar o input escreve no fifo output para o cliente escrever
+		perror("erro fifo out");
+	}
+	if (mkfifo("fifo_in",0666)==-1){//cria fifo input e espera o cliente
+		perror("erro fifo in");
+	}
 	
 	do{
 
@@ -33,6 +37,8 @@ int main(int argc, char *argv[]){
 		close(fd_in);
 		
 		c=parse(buf,comandos);
+
+		atualizarHistorico(historico,ntarefas);
 
 		if (strcmp(comandos[0],CMD_TEMP_INATIV_LONG)==0 || strcmp(comandos[0],CMD_TEMP_INATIV)==0){//tempo de inatividade
 
@@ -65,7 +71,8 @@ int main(int argc, char *argv[]){
 						break;
 					case 0:
 						n=executarTarefa(comandos[1],t_exec,t_ina);					   
-						exit(n);
+						_exit(n);
+						break;
 				}
 				historico[ntarefas%MAX].pid=pid;
 				novaTarefa(++ntarefas%MAX,output);
@@ -104,7 +111,7 @@ int main(int argc, char *argv[]){
 		}
 
 		
-		fd_out=open("fifo_out",O_WRONLY,O_TRUNC); 		 
+		fd_out=open("fifo_out",O_WRONLY); 		 
 		write(fd_out,&output,strlen(output));	
 		close(fd_out);	
 
