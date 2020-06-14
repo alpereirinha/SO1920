@@ -58,3 +58,4 @@ void handlerMaxInat (int sig);
 void paraIN(int argc,char* argv[],char* buf);
 void escreverLerFIFO(char buf[]);
 void parseInput(char* dest, char* src);
+
