@@ -46,10 +46,6 @@ void atualizarHistorico(tarefa t[],int n){
 
 		if (WIFEXITED(status))
 			t[i].terminada=WEXITSTATUS(status);
-
-		//if (WIFSIGNALED(status)){ //se foi terminado por um sinal
-		//	t[i].terminada=WEXITSTATUS(status);
-		//	printf("2: %i\n", t[i].terminada);}
 	}
 }
 
@@ -193,8 +189,6 @@ int executarTarefa(char* arg,int t_exec,int t_ina){//executa uma tarefa
 	if (signal(SIGUSR1,handlerKill)==SIG_ERR){
 		perror("Erro: sinal\n");
 	}
-
-	//sleep(10);
 
 	parseExec(arg,programa);
 
@@ -379,11 +373,11 @@ void escreverLerFIFO(char buf[]){
 	char output[MAX_OUT]="";
 
 	fd_in=open("fifo_in",O_WRONLY);
-	write(fd_in,buf,strlen(buf));
+	if (write(fd_in,buf,strlen(buf))==-1) perror("escrever fifo");
 	close(fd_in);
 
 	fd_out=open("fifo_out",O_RDONLY); 
-	n=read(fd_out,output,MAX_OUT);
+	if ((n=read(fd_out,output,MAX_OUT))==-1) perror ("ler fifo");
 	close (fd_out);
 	write(1,&output,n);
 }
